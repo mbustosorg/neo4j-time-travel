@@ -120,7 +120,27 @@ object Neo4JTimeTravel {
 }
 
 /*
-   * cd ..MATCH (p0:Second), (p2:Record),
+ *
+ * Get first 100 seconds to variable value matches
+ *
+ * MATCH (p1: VariableValue) --> (p0: Second)
+  RETURN p1, p0 limit 100
+ */
+
+/*
+ * Single Update details
+ *
+ * MATCH
+    (p3)-[:RECORD_VARIABLE]->(p2)-[:VARIABLE_ITEM]->(p1)-[:UPDATE_EVENT]->(p0)
+  WHERE
+    id(p0) = 27379 and p3.name = 'record_1_name'
+  RETURN
+p3, p1, p2, p0
+ */
+
+/*
+   *
+   * MATCH (p0:Second), (p2:Record),
     (p2)-[:RECORD_VARIABLE]->(p1),
     r3 = shortestPath((p1)-[:VARIABLE_ITEM|:UPDATE_EVENT|:NEXT]->(p0))
   WHERE
