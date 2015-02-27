@@ -4,15 +4,23 @@ package org.bustos.Neo4JTimeTravel
 // https://github.com/stackmob/newman
 
 import org.anormcypher._
-import com.stackmob.newman._
-import com.stackmob.newman.dsl._
+import akka.actor.ActorSystem
 import scala.concurrent._
 import scala.concurrent.duration._
+import spray.http._
+import spray.client.pipelining._
 import java.net.URL
 
 object Neo4JTimeTravel {
 
-  implicit val httpClient = new ApacheHttpClient
+  implicit val system = ActorSystem()
+  import system.dispatcher // execution context for futures
+  
+  val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
+  
+  val response: Future[HttpResponse] = pipeline(Get("http://spray.io/"))
+
+  implicit val connection = Neo4jREST()
   var timeNodes = Map.empty[Long, Int]
   val tenMinutes: Long = 600 * 1000
   val fiveMinutes: Long = 300 * 1000
@@ -49,16 +57,14 @@ object Neo4JTimeTravel {
 	// Create time nodes
 	val currentTime = System.currentTimeMillis() 
 	for (i <- currentTime to (currentTime + tenMinutes * 20) by thirtySeconds) {
-		val url = new URL("http://localhost:7474/graphaware/timetree/single/" + i + "?resolution=second")
-		val response = Await.result(GET(url).apply, 1.second) //this will throw if the response doesn't return within 1 second
-		timeNodes += (i -> response.bodyString.toInt)
-		val lateUrl = new URL("http://localhost:7474/graphaware/timetree/single/" + (i + tenMinutes) + "?resolution=second")
-		val lateResponse = Await.result(GET(url).apply, 1.second) //this will throw if the response doesn't return within 1 second
-		timeNodes += (i + tenMinutes -> lateResponse.bodyString.toInt)
-		println(s"Response returned from ${url.toString} with code ${response.code}, body ${response.bodyString}")
+//		val url = new URL("http://localhost:7474/graphaware/timetree/single/" + i + "?resolution=second")
+//		val response = Await.result(GET(url).apply, 1.second) //this will throw if the response doesn't return within 1 second
+//		timeNodes += (i -> response.bodyString.toInt)
+//		val lateUrl = new URL("http://localhost:7474/graphaware/timetree/single/" + (i + tenMinutes) + "?resolution=second")
+//		val lateResponse = Await.result(GET(url).apply, 1.second) //this will throw if the response doesn't return within 1 second
+//		timeNodes += (i + tenMinutes -> lateResponse.bodyString.toInt)
+//		println(s"Response returned from ${url.toString} with code ${response.code}, body ${response.bodyString}")
 	}
-
-	implicit val connection = Neo4jREST
 
   val numberOfRecords = 100
   val numberOfVariables = 20
